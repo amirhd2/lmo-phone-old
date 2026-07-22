@@ -10,12 +10,11 @@
   <meta name="apple-mobile-web-app-title" content="دفترچه تلفن">
   <meta name="theme-color" id="theme-color-meta" content="#2196F3">
 
-  <!-- اتصال آیکون واقعی دستگاه -->
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- بارگذاری نسخه آفلاین و محلی SheetJS جهت کارکرد بدون اینترنت -->
+  <!-- کتابخانه محلی SheetJS برای خواندن فایل اکسل -->
   <script src="xlsx.full.min.js"></script>
 
   <style>
@@ -467,7 +466,6 @@
       if (mode === 'google') {
         document.getElementById('uploadPrompt').style.display = 'none';
         
-        // ابتدا سعی میکنیم کش گوگل شیت را لود کنیم تا بدون اینترنت هم سریع لود شود
         const cached = await loadData('google_data');
         if (cached && cached.contacts) {
           contacts = cached.contacts;
@@ -475,7 +473,6 @@
           renderList(contacts);
         }
         
-        // سپس اگر اینترنت برقرار بود نسخه جدید را می گیریم
         if (navigator.onLine) {
           fetchGoogleSheetData();
         }

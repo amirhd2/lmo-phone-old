@@ -35,7 +35,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('docs.google.com')) {
-    return; // اجازه عبور درخواست گوگل شیت به شبکه
+    return;
   }
 
   event.respondWith(
