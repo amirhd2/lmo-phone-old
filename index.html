@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- کتابخانه SheetJS برای خواندن فایل اکسل -->
+  <!-- کتابخانه کامل SheetJS برای خواندن فایل اکسل -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -75,7 +75,7 @@
     }
 
     .header-title {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: bold;
       margin: 0;
       display: flex;
@@ -149,10 +149,11 @@
       display: flex;
       gap: 6px;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .btn-icon-small {
-      padding: 7px 12px;
+      padding: 7px 10px;
       font-size: 13px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -319,7 +320,7 @@
   <div class="app-header">
     <div class="header-top-line">
       <h1 class="header-title">
-        <img src="icon.png" width="30" height="30" style="border-radius: 6px; object-fit: cover;" alt="logo" onerror="this.style.display='none'">
+        <img src="icon.png" width="28" height="28" style="border-radius: 6px; object-fit: cover;" alt="logo" onerror="this.style.display='none'">
         دفترچه تلفن سازمان
       </h1>
 
@@ -342,7 +343,7 @@
 
       <div class="toolbar-actions">
         <button id="refreshOnlineBtn" class="btn-icon-small" title="بروزرسانی آنلاین" onclick="fetchGoogleSheetData()">🔄</button>
-        <button id="uploadTriggerBtn" class="btn-icon-small primary-highlight" style="display:none;" title="انتخاب فایل اکسل" onclick="document.getElementById('excelFileInput').click();">📂 انتخاب فایل</button>
+        <button id="uploadTriggerBtn" class="btn-icon-small primary-highlight" style="display:none;" title="انتخاب فایل اکسل جدید" onclick="document.getElementById('excelFileInput').click();">📁</button>
       </div>
     </div>
 
@@ -357,7 +358,7 @@
     <h3>هیچ فایل اکسلی بارگذاری نشده است</h3>
     <p>لطفاً یک فایل اکسل (.xlsx) حاوی مشخصات مخاطبین انتخاب کنید.</p>
     <button class="btn-icon-small primary-highlight" style="padding: 10px 16px; font-size: 14px; width: auto;" onclick="document.getElementById('excelFileInput').click();">
-      📂 انتخاب فایل اکسل از دستگاه
+      📁 انتخاب فایل اکسل از دستگاه
     </button>
   </div>
 
@@ -487,7 +488,7 @@
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
         const sheetName = workbook.SheetNames[0];
-        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
 
         contacts = raw.map(c => {
           const clean = {};
@@ -643,16 +644,6 @@
       });
     }
 
-    function checkFirstTimeModal() {
-      if (!localStorage.getItem('phonebook_modal_shown') && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        document.getElementById('firstTimeInstallModal').style.display = 'flex';
-      }
-    }
-    function closeFirstTimeModal() {
-      document.getElementById('firstTimeInstallModal').style.display = 'none';
-      localStorage.setItem('phonebook_modal_shown', 'true');
-    }
-
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
@@ -671,7 +662,6 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       initTheme();
-      checkFirstTimeModal();
       const savedMode = localStorage.getItem('phonebook_selected_mode') || 'google';
       await switchDataMode(savedMode);
     });
