@@ -10,11 +10,12 @@
   <meta name="apple-mobile-web-app-title" content="دفترچه تلفن">
   <meta name="theme-color" id="theme-color-meta" content="#2196F3">
 
+  <!-- اتصال آیکون واقعی دستگاه -->
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- بارگذاری نسخه آفلاین و محلی SheetJS جهت عدم وابستگی به اینترنت -->
+  <!-- بارگذاری نسخه آفلاین و محلی SheetJS جهت کارکرد بدون اینترنت -->
   <script src="xlsx.full.min.js"></script>
 
   <style>
@@ -25,6 +26,9 @@
       --text-muted: #718096;
       --border-color: #dcdfe6;
       --status-bg: #f0f4f8;
+      --selector-bg: #e2e8f0;
+      --btn-active-bg: #ffffff;
+      --btn-active-text: #1a202c;
       --input-bg: #ffffff;
       --shadow-color: rgba(0,0,0,0.05);
       --card-border: #e2e8f0;
@@ -37,6 +41,9 @@
       --text-muted: #94a3b8;
       --border-color: #334155;
       --status-bg: #0f172a;
+      --selector-bg: #0f172a;
+      --btn-active-bg: #334155;
+      --btn-active-text: #ffffff;
       --input-bg: #0f172a;
       --shadow-color: rgba(0,0,0,0.3);
       --card-border: #334155;
@@ -105,13 +112,49 @@
 
     .top-toolbar {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: 8px;
       margin-bottom: 12px;
     }
 
+    .source-selector {
+      display: inline-flex;
+      background: var(--selector-bg);
+      padding: 3px;
+      border-radius: 8px;
+      flex-grow: 1;
+    }
+    .source-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 10px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .source-btn.active {
+      background: var(--btn-active-bg);
+      color: var(--btn-active-text);
+      font-weight: bold;
+      box-shadow: 0 1px 3px var(--shadow-color);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
     .btn-icon-small {
-      padding: 9px 14px;
-      font-size: 14px;
+      padding: 7px 12px;
+      font-size: 13px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--card-bg);
@@ -120,15 +163,15 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
       transition: background 0.2s;
+      white-space: nowrap;
     }
     .btn-icon-small.primary-highlight {
       background: #ebf8ff;
       border-color: #90caf9;
       color: #1976d2;
       font-weight: bold;
-      width: 100%;
     }
     [data-theme="dark"] .btn-icon-small.primary-highlight {
       background: #1e3a8a;
@@ -277,21 +320,7 @@
   <div class="app-header">
     <div class="header-top-line">
       <h1 class="header-title">
-        <svg width="26" height="26" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="512" height="512" rx="100" fill="#2196F3"/>
-          <path d="M160 120 C160 80 352 80 352 120 L352 160 C352 175 330 180 320 160 L300 130 C290 120 222 120 212 130 L192 160 C182 180 160 175 160 160 Z" fill="white"/>
-          <circle cx="256" cy="310" r="100" fill="white"/>
-          <circle cx="256" cy="310" r="75" fill="#2196F3"/>
-          <circle cx="256" cy="260" r="12" fill="white"/>
-          <circle cx="298" cy="272" r="12" fill="white"/>
-          <circle cx="318" cy="310" r="12" fill="white"/>
-          <circle cx="298" cy="348" r="12" fill="white"/>
-          <circle cx="256" cy="360" r="12" fill="white"/>
-          <circle cx="214" cy="348" r="12" fill="white"/>
-          <circle cx="194" cy="310" r="12" fill="white"/>
-          <circle cx="214" cy="272" r="12" fill="white"/>
-          <path d="M200 155 Q 120 200 160 300" stroke="white" stroke-width="16" fill="none" stroke-linecap="round"/>
-        </svg>
+        <img src="icon.png" width="30" height="30" style="border-radius: 6px; object-fit: cover;" alt="logo">
         دفترچه تلفن سازمان
       </h1>
 
@@ -301,15 +330,21 @@
     <div class="status-bar">
       <div class="status-badge">
         <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">آماده به کار (آفلاین)</span>
+        <span id="statusText">آماده به کار</span>
       </div>
       <div id="fileInfo" style="font-size: 12px; color: var(--text-muted);"></div>
     </div>
 
     <div class="top-toolbar">
-      <button class="btn-icon-small primary-highlight" onclick="document.getElementById('excelFileInput').click();">
-        📂 بارگذاری یا تغییر فایل اکسل جدید
-      </button>
+      <div class="source-selector">
+        <button id="modeGoogleBtn" class="source-btn active" onclick="switchDataMode('google')">🌐 نسخه آنلاین</button>
+        <button id="modeLocalBtn" class="source-btn" onclick="switchDataMode('local')">📁 بارگذاری از فایل</button>
+      </div>
+
+      <div class="toolbar-actions">
+        <button id="refreshOnlineBtn" class="btn-icon-small" title="بروزرسانی آنلاین" onclick="fetchGoogleSheetData()">🔄</button>
+        <button id="uploadFileBtn" class="btn-icon-small primary-highlight" style="display: none;" onclick="document.getElementById('excelFileInput').click();">📂 انتخاب فایل</button>
+      </div>
     </div>
 
     <div class="search-container">
@@ -353,10 +388,13 @@
   </div>
 
   <script>
-    const DB_NAME = 'PhonebookLocalDB';
+    const DEFAULT_GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1kcak7dDG6jaacYbdUhamlN7alh_UZKXY/export?format=xlsx';
+    
+    const DB_NAME = 'PhonebookAppDB';
     const DB_VERSION = 1;
-    const STORE_NAME = 'contactsStore';
+    const STORE_NAME = 'phonebookStore';
 
+    let currentMode = 'google';
     let contacts = [];
 
     function initTheme() {
@@ -388,13 +426,13 @@
       });
     }
 
-    async function saveData(contactsData, fileName) {
+    async function saveData(key, contactsData, fileName) {
       const db = await openDatabase();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const record = {
-          key: 'local_excel_data',
+          key: key,
           contacts: contactsData,
           fileName: fileName,
           updatedAt: new Date().toLocaleDateString('fa-IR') + ' - ' + new Date().toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})
@@ -405,36 +443,94 @@
       });
     }
 
-    async function loadSavedData() {
+    async function loadData(key) {
       const db = await openDatabase();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
-        const req = store.get('local_excel_data');
+        const req = store.get(key);
         req.onsuccess = () => resolve(req.result);
         req.onerror = (e) => reject(e.target.error);
       });
     }
 
-    async function initApp() {
-      try {
-        const record = await loadSavedData();
-        if (record && record.contacts && record.contacts.length > 0) {
-          contacts = record.contacts;
-          document.getElementById('uploadPrompt').style.display = 'none';
-          updateStatus(`فایل فعال: ${record.fileName}`, '#4CAF50', record.updatedAt);
+    async function switchDataMode(mode) {
+      currentMode = mode;
+      localStorage.setItem('phonebook_selected_mode', mode);
+
+      document.getElementById('modeGoogleBtn').classList.toggle('active', mode === 'google');
+      document.getElementById('modeLocalBtn').classList.toggle('active', mode === 'local');
+
+      document.getElementById('refreshOnlineBtn').style.display = (mode === 'google') ? 'inline-flex' : 'none';
+      document.getElementById('uploadFileBtn').style.display = (mode === 'local') ? 'inline-flex' : 'none';
+
+      if (mode === 'google') {
+        document.getElementById('uploadPrompt').style.display = 'none';
+        
+        // ابتدا سعی میکنیم کش گوگل شیت را لود کنیم تا بدون اینترنت هم سریع لود شود
+        const cached = await loadData('google_data');
+        if (cached && cached.contacts) {
+          contacts = cached.contacts;
+          updateStatus('نسخه آنلاین (حافظه موقت)', '#2196F3', cached.updatedAt);
           renderList(contacts);
-        } else {
-          document.getElementById('uploadPrompt').style.display = 'block';
-          updateStatus('لطفاً یک فایل اکسل انتخاب کنید', '#ff9800');
         }
-      } catch (err) {
-        console.error(err);
-        document.getElementById('uploadPrompt').style.display = 'block';
+        
+        // سپس اگر اینترنت برقرار بود نسخه جدید را می گیریم
+        if (navigator.onLine) {
+          fetchGoogleSheetData();
+        }
+      } else {
+        await loadLocalFileData();
       }
     }
 
-    function handleFile(file) {
+    async function fetchGoogleSheetData() {
+      updateStatus('در حال دریافت آنلاین...', '#ff9800');
+      try {
+        const response = await fetch(DEFAULT_GOOGLE_SHEET_URL);
+        if (!response.ok) throw new Error('خطا در دریافت');
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        contacts = raw.map(c => {
+          const clean = {};
+          for (let k in c) clean[k.trim()] = c[k];
+          return clean;
+        });
+
+        const saved = await saveData('google_data', contacts, 'گوگل شیت');
+        updateStatus('نسخه آنلاین فعال', '#4CAF50', saved.updatedAt);
+        renderList(contacts);
+      } catch (err) {
+        const cached = await loadData('google_data');
+        if (cached && cached.contacts) {
+          contacts = cached.contacts;
+          updateStatus('حالت آفلاین (داده‌های ذخیره‌شده)', '#ff9800', cached.updatedAt);
+          renderList(contacts);
+        } else {
+          updateStatus('عدم دسترسی به اینترنت و بدون داده ذخیره‌شده', '#f44336');
+        }
+      }
+    }
+
+    async function loadLocalFileData() {
+      const record = await loadData('local_data');
+      if (record && record.contacts && record.contacts.length > 0) {
+        contacts = record.contacts;
+        document.getElementById('uploadPrompt').style.display = 'none';
+        updateStatus(`فایل: ${record.fileName}`, '#2196F3', record.updatedAt);
+        renderList(contacts);
+      } else {
+        contacts = [];
+        document.getElementById('contactsContainer').innerHTML = '';
+        document.getElementById('uploadPrompt').style.display = 'block';
+        updateStatus('لطفاً فایل اکسل انتخاب کنید', '#ff9800');
+      }
+    }
+
+    function handleLocalFile(file) {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = async function(e) {
@@ -442,9 +538,9 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
-          const rawContacts = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-          contacts = rawContacts.map(c => {
+          contacts = raw.map(c => {
             const clean = {};
             for (let k in c) clean[k.trim()] = c[k];
             return clean;
@@ -455,9 +551,9 @@
             return;
           }
 
-          const saved = await saveData(contacts, file.name);
+          const saved = await saveData('local_data', contacts, file.name);
           document.getElementById('uploadPrompt').style.display = 'none';
-          updateStatus(`فایل فعال: ${saved.fileName}`, '#4CAF50', saved.updatedAt);
+          updateStatus(`فایل: ${saved.fileName}`, '#4CAF50', saved.updatedAt);
           renderList(contacts);
         } catch (err) {
           alert('خطا در خواندن فایل اکسل.');
@@ -469,7 +565,7 @@
     function updateStatus(text, color, time = '') {
       document.getElementById('statusDot').style.backgroundColor = color;
       document.getElementById('statusText').textContent = text;
-      document.getElementById('fileInfo').textContent = time ? `ذخیره: ${time}` : '';
+      document.getElementById('fileInfo').textContent = time ? `بروزرسانی: ${time}` : '';
     }
 
     function hexGradient(start, end, steps) {
@@ -575,13 +671,14 @@
     });
 
     document.getElementById('excelFileInput').addEventListener('change', (e) => {
-      if (e.target.files.length > 0) handleFile(e.target.files[0]);
+      if (e.target.files.length > 0) handleLocalFile(e.target.files[0]);
     });
 
     window.addEventListener('DOMContentLoaded', async () => {
       initTheme();
       checkFirstTimeModal();
-      await initApp();
+      const savedMode = localStorage.getItem('phonebook_selected_mode') || 'google';
+      await switchDataMode(savedMode);
     });
   </script>
 </body>
