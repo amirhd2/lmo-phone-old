@@ -14,8 +14,8 @@
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- کتابخانه محلی SheetJS برای خواندن فایل اکسل -->
-  <script src="xlsx.full.min.js"></script>
+  <!-- کتابخانه SheetJS برای خواندن فایل اکسل -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -319,7 +319,7 @@
   <div class="app-header">
     <div class="header-top-line">
       <h1 class="header-title">
-        <img src="icon.png" width="30" height="30" style="border-radius: 6px; object-fit: cover;" alt="logo">
+        <img src="icon.png" width="30" height="30" style="border-radius: 6px; object-fit: cover;" alt="logo" onerror="this.style.display='none'">
         دفترچه تلفن سازمان
       </h1>
 
@@ -342,7 +342,7 @@
 
       <div class="toolbar-actions">
         <button id="refreshOnlineBtn" class="btn-icon-small" title="بروزرسانی آنلاین" onclick="fetchGoogleSheetData()">🔄</button>
-        <button id="uploadFileBtn" class="btn-icon-small primary-highlight" style="display: none;" onclick="document.getElementById('excelFileInput').click();">📂 انتخاب فایل</button>
+        <button id="uploadTriggerBtn" class="btn-icon-small primary-highlight" style="display:none;" title="انتخاب فایل اکسل" onclick="document.getElementById('excelFileInput').click();">📂 انتخاب فایل</button>
       </div>
     </div>
 
@@ -351,7 +351,7 @@
     </div>
   </div>
 
-  <input type="file" id="excelFileInput" accept=".xlsx, .xls">
+  <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv">
 
   <div id="uploadPrompt" class="upload-card" style="display: none;">
     <h3>هیچ فایل اکسلی بارگذاری نشده است</h3>
@@ -461,7 +461,7 @@
       document.getElementById('modeLocalBtn').classList.toggle('active', mode === 'local');
 
       document.getElementById('refreshOnlineBtn').style.display = (mode === 'google') ? 'inline-flex' : 'none';
-      document.getElementById('uploadFileBtn').style.display = (mode === 'local') ? 'inline-flex' : 'none';
+      document.getElementById('uploadTriggerBtn').style.display = (mode === 'local') ? 'inline-flex' : 'none';
 
       if (mode === 'google') {
         document.getElementById('uploadPrompt').style.display = 'none';
@@ -473,9 +473,7 @@
           renderList(contacts);
         }
         
-        if (navigator.onLine) {
-          fetchGoogleSheetData();
-        }
+        fetchGoogleSheetData();
       } else {
         await loadLocalFileData();
       }
@@ -507,7 +505,7 @@
           updateStatus('حالت آفلاین (داده‌های ذخیره‌شده)', '#ff9800', cached.updatedAt);
           renderList(contacts);
         } else {
-          updateStatus('عدم دسترسی به اینترنت و بدون داده ذخیره‌شده', '#f44336');
+          updateStatus('خطا در دریافت اطلاعات آنلاین', '#f44336');
         }
       }
     }
@@ -517,7 +515,7 @@
       if (record && record.contacts && record.contacts.length > 0) {
         contacts = record.contacts;
         document.getElementById('uploadPrompt').style.display = 'none';
-        updateStatus(`فایل: ${record.fileName}`, '#2196F3', record.updatedAt);
+        updateStatus(`فایل: ${record.fileName}`, '#4CAF50', record.updatedAt);
         renderList(contacts);
       } else {
         contacts = [];
@@ -535,7 +533,7 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
-          const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+          const raw = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
 
           contacts = raw.map(c => {
             const clean = {};
@@ -544,7 +542,7 @@
           });
 
           if (contacts.length === 0) {
-            alert('فایل اکسل خالی است.');
+            updateStatus('فایل اکسل خالی است یا فرمت آن نامعتبر است.', '#f44336');
             return;
           }
 
@@ -553,7 +551,7 @@
           updateStatus(`فایل: ${saved.fileName}`, '#4CAF50', saved.updatedAt);
           renderList(contacts);
         } catch (err) {
-          alert('خطا در خواندن فایل اکسل.');
+          updateStatus('خطا در خواندن فایل اکسل. لطفاً فایل معتبری انتخاب کنید.', '#f44336');
         }
       };
       reader.readAsArrayBuffer(file);
@@ -597,7 +595,7 @@
       const groups = {};
       const ordered = [];
       list.forEach(c => {
-        const u = c['واحد'] || 'نامشخص';
+        const u = c['واحد'] || c['بخش'] || 'نامشخص';
         if (!groups[u]) { groups[u] = []; ordered.push(u); }
         groups[u].push(c);
       });
