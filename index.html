@@ -180,11 +180,13 @@
     }
 
     .search-container {
+      position: relative;
       display: flex;
+      align-items: center;
     }
     .search-box {
       width: 100%;
-      padding: 11px 14px;
+      padding: 11px 45px 11px 14px;
       font-size: 15px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
@@ -195,6 +197,33 @@
     .search-box:focus {
       border-color: #2196F3;
       box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+    }
+
+    /* دکمه پاک کردن متن جستجو با استایل شبیه ماشین حساب */
+    .clear-search-btn {
+      position: absolute;
+      left: 8px;
+      background: linear-gradient(135deg, #ff7043, #f4511e);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(244, 81, 30, 0.3);
+      transition: all 0.2s ease;
+    }
+    .clear-search-btn:hover {
+      background: linear-gradient(135deg, #f4511e, #d84315);
+      transform: scale(1.05);
+    }
+    .clear-search-btn:active {
+      transform: scale(0.95);
     }
 
     input[type="file"] { display: none; }
@@ -343,12 +372,14 @@
 
       <div class="toolbar-actions">
         <button id="refreshOnlineBtn" class="btn-icon-small" title="بروزرسانی آنلاین" onclick="fetchGoogleSheetData()">🔄</button>
+        <!-- دکمه پوشه بدون متن اضافی و بدون بیرون زدگی در موبایل -->
         <button id="uploadTriggerBtn" class="btn-icon-small primary-highlight" style="display:none;" title="انتخاب فایل اکسل جدید" onclick="document.getElementById('excelFileInput').click();">📁</button>
       </div>
     </div>
 
     <div class="search-container">
       <input type="text" id="searchInput" class="search-box" placeholder="جستجوی نام، واحد یا شماره داخلی...">
+      <button type="button" class="clear-search-btn" id="clearSearchBtn" title="پاک کردن جستجو" onclick="clearSearchInput()">✕</button>
     </div>
   </div>
 
@@ -363,29 +394,6 @@
   </div>
 
   <div id="contactsContainer" class="contacts-container"></div>
-
-  <div class="modal-overlay" id="firstTimeInstallModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>راهنمای افزودن به گوشی (آفلاین)</h3>
-        <button class="close-btn" onclick="closeFirstTimeModal()">&times;</button>
-      </div>
-      <div style="font-size: 14px; line-height: 1.8;">
-        <p>جهت دسترسی سریع و استفاده ۱۰۰٪ آفلاین، این برنامه را به صفحه اصلی گوشی خود اضافه کنید:</p>
-        <h4 style="color: #2196F3; margin-bottom: 5px;">🍏 در آیفون (Safari):</h4>
-        <ol style="padding-right: 20px; margin-top: 5px;">
-          <li>دکمه <strong>Share</strong> (مربع با فلش رو به بالا) را بزنید.</li>
-          <li>گزینه <strong>Add to Home Screen</strong> را انتخاب کنید.</li>
-        </ol>
-        <h4 style="color: #4CAF50; margin-bottom: 5px;">🤖 در اندروید (Chrome):</h4>
-        <ol style="padding-right: 20px; margin-top: 5px;">
-          <li>دکمه <strong>سه نقطه</strong> بالای مرورگر را بزنید.</li>
-          <li>گزینه <strong>Install app</strong> یا <strong>Add to Home Screen</strong> را انتخاب کنید.</li>
-        </ol>
-        <button class="btn-confirm" onclick="closeFirstTimeModal()">متوجه شدم</button>
-      </div>
-    </div>
-  </div>
 
   <script>
     const DEFAULT_GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1kcak7dDG6jaacYbdUhamlN7alh_UZKXY/export?format=xlsx';
@@ -642,6 +650,13 @@
         groupDiv.appendChild(table);
         container.appendChild(groupDiv);
       });
+    }
+
+    function clearSearchInput() {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.value = '';
+      renderList(contacts);
+      searchInput.focus();
     }
 
     if ('serviceWorker' in navigator) {
