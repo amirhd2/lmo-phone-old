@@ -1,11 +1,10 @@
-const CACHE_NAME = 'phonebook-pwa-v12';
+const CACHE_NAME = 'phonebook-pwa-v11';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './icon.png',
-  './version.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+  './xlsx.full.min.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -35,6 +34,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('docs.google.com')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
